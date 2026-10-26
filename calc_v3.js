@@ -1,86 +1,95 @@
 const n1Elem = document.getElementById("n1");
 const n2Elem = document.getElementById("n2");
-const calcolBtn = document.getElementById("calcolaBtn")
+const calcolaBtn = document.getElementById("calcolaBtn")
 
 const op = document.getElementById("operation");
 const resElem = document.getElementById("result")
-const message = document.getElementById("messaggio")
+const error = document.getElementById("error")
 
 const contenitori = document.getElementsByClassName("contenitore")
 
+const LIMIT = 1000000
 let interval
 
+
 //JS OBJ = hashmap -> k,v
-// tutte le op funzionano come devono
 const operations = {
-    '+': (a,b) => a + b,
-    '-': (a,b) => a - b,
-    '*': (a,b) => a * b,
-    '/': (a,b) => {
+    '+': (a, b) => a + b,
+    '-': (a, b) => a - b,
+    '*': (a, b) => a * b,
+    '/': (a, b) => {
         if (b === 0) throw new Error("Denominator is zero.");
         return a / b
     },
-    'MAX': (a,b) => a > b ? a:b,
-    'MIN': (a,b) => a < b ? a:b,
+    '**': (a, b) => Math.pow(a, b),
+    '%': (a, b) => {
+        if (b === 0) throw new Error("Denominator is zero.");
+        return a % b
+    },
+    'MAX': (a, b) => a > b ? a : b,
+    'MIN': (a, b) => a < b ? a : b,
 }
 
 //4
 const regole = [
-    function notUndef(a,b) {return a!==undefined && b!==undefined},
-    function tooBig(a,b) {return a<1000 && b<1000},
-    function isSatanic(a,b) {return a!==666 && b!==666}
+    (t1, t2) => {
+        if (t1 === "" || t2 === "") throw new Error("Inserire entrambi i numeri.")
+        },
+    (t1, t2) => {
+        if (Math.abs(t1) > LIMIT || Math.abs(t2) > LIMIT) throw new Error("Numeri troppo grandi.")
+        },
 ]
+
+//5 bottoni
+for (const simbolo in operations) {
+    const bottone = document.createElement("button")
+    bottone.textContent = simbolo
+    bottone.addEventListener("click", forOperation(bottone.textContent))
+    contenitori[0].appendChild(bottone)
+}
 
 //3
 function scegliOperazione(simbolo) {
-    let f = operations[simbolo]
-    if (!f) throw new Error("Operazione non supportata: "+simbolo)
-        return f
+    const v = operations[simbolo]
+    if (v === undefined) throw new Error("Operazione non supportata: " + simbolo)
+    return v
 }
 
-function compute (f,a,b) {return f(a,b)}
+function compute(f, a, b) { return f(a, b) }
 
 //4
 function valida(regole, t1, t2) {
-    for (let i=0; i<regole.length; i++) {
-        const r = regole[i]
-        if (!r(t1,t2)) throw new Error("Regola violata: "+ r.name)
-        }
+    for (const regola of regole) {
+        regola(t1, t2)
+    }
 }
 
-//5
-function perOperazione(simbolo) {
+function executeComp(a, op, b) {
     return function () {
-        const a = Number(n1Elem.value)
-        const b = Number(n2Elem.value)
-        
-        message.textContent = ""
         try {
-            const f = scegliOperazione(simbolo)
-            resElem.textContent = formatta(a, simbolo, b, compute(f, a, b))
-        } catch (err) {
+            valida(regole, n1Elem.value, n2Elem.value)
+            const a = n1Elem.value
+            const b = n2Elem.value
+
             resElem.textContent = ""
-            message.textContent = "Errore: " + err.message
+            const res = compute(scegliOperazione(op), a, b)
+            resElem.textContent = formatta(a, op, b, res)
+        } catch (err) {
+            error.textContent = "Errore: " + err.message
         }
     }
 }
 
-
-//5 creo bottoni
-for (const simbolo in operations) {
-    const bottone = document.createElement("button")
-    bottone.textContent = simbolo
-    bottone.addEventListener("click", perOperazione(simbolo))
-    contenitori[0].appendChild(bottone)
+//5
+function forOperation(simbolo) {
+    return function () {
+        executeComp(n1Elem.value, simbolo, n2Elem.value)
+    }
 }
 
 //6
-function formatta(a,s,b,r) {
+function formatta(a, s, b, r) {
     return `${a} ${s} ${b} = ${r}`
 }
 
-
-
-calcolBtn.addEventListener ("click", function () {
-    perOperazione(op.value)()
-})
+calcolaBtn.addEventListener("click", forOperation(op.value))
