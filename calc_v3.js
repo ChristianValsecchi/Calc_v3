@@ -6,10 +6,13 @@ const op = document.getElementById("operation");
 const resElem = document.getElementById("result")
 const error = document.getElementById("error")
 
+const aiutoElem = document.getElementById("aiuto")
+
 const contenitori = document.getElementsByClassName("contenitore")
 
 const LIMIT = 1000000
 let interval
+
 
 
 //JS OBJ = hashmap -> k,v
@@ -34,19 +37,12 @@ const operations = {
 const regole = [
     (t1, t2) => {
         if (t1 === "" || t2 === "") throw new Error("Inserire entrambi i numeri.")
-        },
+    },
     (t1, t2) => {
         if (Math.abs(t1) > LIMIT || Math.abs(t2) > LIMIT) throw new Error("Numeri troppo grandi.")
-        },
+    },
 ]
 
-//5 bottoni
-for (const simbolo in operations) {
-    const bottone = document.createElement("button")
-    bottone.textContent = simbolo
-    bottone.addEventListener("click", forOperation(bottone.textContent))
-    contenitori[0].appendChild(bottone)
-}
 
 //3
 function scegliOperazione(simbolo) {
@@ -64,26 +60,24 @@ function valida(regole, t1, t2) {
     }
 }
 
-function executeComp(a, op, b) {
-    return function () {
-        try {
-            valida(regole, n1Elem.value, n2Elem.value)
-            const a = n1Elem.value
-            const b = n2Elem.value
+function executeOp(a, op, b) {
+    try {
+        valida(regole, n1Elem.value, n2Elem.value)
+        const a = Number(n1Elem.value)
+        const b = Number(n2Elem.value)
 
-            resElem.textContent = ""
-            const res = compute(scegliOperazione(op), a, b)
-            resElem.textContent = formatta(a, op, b, res)
-        } catch (err) {
-            error.textContent = "Errore: " + err.message
-        }
+        resElem.textContent = ""
+        const res = compute(scegliOperazione(op), a, b)
+        resElem.textContent = formatta(a, op, b, res)
+    } catch (err) {
+        error.textContent = "Errore: " + err.message
     }
 }
 
 //5
 function forOperation(simbolo) {
-    return function () {
-        executeComp(n1Elem.value, simbolo, n2Elem.value)
+    return () => {
+        executeOp(n1Elem.value, simbolo, n2Elem.value)
     }
 }
 
@@ -92,4 +86,53 @@ function formatta(a, s, b, r) {
     return `${a} ${s} ${b} = ${r}`
 }
 
-calcolaBtn.addEventListener("click", forOperation(op.value))
+//5 bottoni
+for (const simbolo in operations) {
+    const bottone = document.createElement("button")
+    bottone.textContent = simbolo
+    bottone.addEventListener("click", forOperation(bottone.textContent))
+    contenitori[0].appendChild(bottone)
+}
+
+
+
+//SEZIONE B
+function update() {
+    return executeOp(n1Elem.value, op.value, n2Elem.value)
+}
+calcolaBtn.addEventListener("click", update)
+op.addEventListener("change", update)
+n1Elem.addEventListener("input", update)
+n2Elem.addEventListener("input", update)
+
+document.addEventListener("keydown", keyManager(keyMap))
+
+const keyMap = {
+    Enter: update,
+    Escape: () => {
+        n1Elem.value = ""
+        n2Elem.value = ""
+        resElem.textContent = ""
+        error.textContent = ""
+    },
+}
+
+const helpMap = {
+    "n1": "Inserire il primo numero",
+    "n2": "Inserire il secondo numero",
+    "operation": "Selezionare l'operazione da eseguire",
+    "calcolaBtn": "Cliccare per calcolare il risultato",
+}
+
+function keyManager(keyMap) {
+    return (e) => {
+        const userAction = keyMap[e.key]
+        if (userAction !== undefined) userAction()
+    }
+}
+
+function gestoreTesto(helpMap, keyOf, show) {
+    return (e) => {
+        
+    }
+}
