@@ -6,7 +6,7 @@ const op = document.getElementById("operation");
 const resElem = document.getElementById("result")
 const error = document.getElementById("error")
 
-const aiutoElem = document.getElementById("aiuto")
+const helpElem = document.getElementById("help")
 
 const contenitori = document.getElementsByClassName("contenitore")
 
@@ -86,15 +86,6 @@ function formatta(a, s, b, r) {
     return `${a} ${s} ${b} = ${r}`
 }
 
-//5 bottoni
-for (const simbolo in operations) {
-    const bottone = document.createElement("button")
-    bottone.textContent = simbolo
-    bottone.addEventListener("click", forOperation(bottone.textContent))
-    contenitori[0].appendChild(bottone)
-}
-
-
 
 //SEZIONE B
 function update() {
@@ -105,34 +96,93 @@ op.addEventListener("change", update)
 n1Elem.addEventListener("input", update)
 n2Elem.addEventListener("input", update)
 
-document.addEventListener("keydown", keyManager(keyMap))
 
+//ES 8
+//il keydown viene usato in TUTTO il documento
 const keyMap = {
     Enter: update,
     Escape: () => {
         n1Elem.value = ""
         n2Elem.value = ""
-        resElem.textContent = ""
-        error.textContent = ""
+        resElem.textContent = " "
+        error.textContent = " "
     },
-}
-
-const helpMap = {
-    "n1": "Inserire il primo numero",
-    "n2": "Inserire il secondo numero",
-    "operation": "Selezionare l'operazione da eseguire",
-    "calcolaBtn": "Cliccare per calcolare il risultato",
 }
 
 function keyManager(keyMap) {
     return (e) => {
         const userAction = keyMap[e.key]
         if (userAction !== undefined) userAction()
+        }
+}
+
+document.addEventListener("keydown", keyManager(keyMap))
+
+
+//ES 9
+const txtHelper = {
+    //id : txt
+    n1: "Inserire il primo numero",
+    n2: "Inserire il secondo numero",
+    operation: "Selezionare l'operazione da eseguire",
+    calcolaBtn: "Cliccare per calcolare il risultato",
+}
+
+function textManager(txtMap, keyOf, show) {
+    // e = eventObject
+    return (e) => {
+        //con che chiave accedo alla mappa?
+        //1. keyOf(e.target) -> id del target
+        //2. txtMap[ (1) ] -> restituisce stringa associata all'id
+        //3. show -> mostra (2)
+        show(txtMap[keyOf(e)])
     }
 }
 
-function gestoreTesto(helpMap, keyOf, show) {
-    return (e) => {
-        
-   }
+const v = textManager(txtHelper, (e) => e.target.id, (txt) => helpElem.textContent = txt)
+n1Elem.addEventListener("focus", v)                                     //focus = quando il cursore entra nel campo
+n1Elem.addEventListener("blur", () => helpElem.textContent = "")        //blur = quando il cursore esce dal campo
+
+n2Elem.addEventListener("focus", v)
+n2Elem.addEventListener("blur", () => helpElem.textContent = "")
+
+op.addEventListener("focus", v)
+op.addEventListener("blur", () => helpElem.textContent = "")
+
+calcolaBtn.addEventListener("focus", v)
+calcolaBtn.addEventListener("blur", () => helpElem.textContent = "")
+
+
+const operationsHelper = {
+    "+": "Clicca per somma",
+    "-": "Clicca per sottrazione",
+    "*": "Clicca per moltiplicazione",
+    "/": "Clicca per divisione",
+    "**": "Clicca per potenza",
+    "%": "Clicca per modulo",
+    "MAX": "Clicca per massimo",
+    "MIN": "Clicca per minimo",
+}
+
+function describeOperation(e) {
+    e.preventDefault()
+    textManager(operationsHelper, (e) => e.target.textContent, (txt) => helpElem.textContent = txt)(e)
+}
+
+//5 bottoni
+for (const simbolo in operations) {
+    const bottone = document.createElement("button")
+    bottone.textContent = simbolo
+    bottone.addEventListener("click", forOperation(bottone.textContent))
+    bottone.addEventListener("contextmenu", describeOperation)
+    contenitori[0].appendChild(bottone)
+}
+
+//ES 11
+resElem.addEventListener("dblclick", setAsFirstNumber)
+
+function setAsFirstNumber() {
+    n1Elem.value = resElem.textContent.split(" ")[4] //divide il risultato formattato in array e prende il 5 elemento (il risultato)
+    n2Elem.value = ""
+    update()                                         //aggiorna il risultato con il nuovo primo numero
 }
