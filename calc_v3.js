@@ -134,5 +134,5 @@ function keyManager(keyMap) {
 function gestoreTesto(helpMap, keyOf, show) {
     return (e) => {
         
-    }
+   }
 }
